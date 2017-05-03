@@ -1,0 +1,63 @@
+ ¢Ù       HttpURLConnection conn = null;
+        try {
+            URL url = new URL(address);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setUseCaches(false);
+
+            InputStream input = conn.getInputStream();
+            InputStreamReader inputreader = new InputStreamReader(input);
+            BufferedReader reader = new BufferedReader(inputreader);
+            String response = "";
+            String str = reader.readLine();
+            while (str != null) {
+                response += str;
+                str = reader.readLine();
+            }
+            String jsonString = response.toString();
+          } catch (MalformedURLException e) {
+            e.printStackTrace();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+
+
+¢Ú                try {
+			byte[] buffer = new byte[1024];
+			int fileLen = Integer.MAX_VALUE;
+			URL url = new URL(fromUrl);
+			URLConnection urlConnection = url.openConnection();
+			if (urlConnection instanceof HttpURLConnection) {
+	          HttpURLConnection httpUrlConnection = (HttpURLConnection) urlConnection;
+				httpUrlConnection.connect();
+
+				int len = httpUrlConnection.getContentLength();
+				if (len >= 0) {
+					fileLen = len;
+				}
+				String type = httpUrlConnection.getContentType();
+				if (type.indexOf("image/") != 0) {
+				}
+			} else {
+				// lets assume that everything is ok
+			}
+
+			InputStream in = urlConnection.getInputStream();
+			FileOutputStream fOut = new FileOutputStream(toFile);
+			int len;
+			int loaded = 0;
+			deliverResult(new PicrureLoaderResult(LoaderResult.LOADING, 0));
+			while ((len = in.read(buffer)) != -1) {
+				fOut.write(buffer, 0, len);
+				loaded += len;
+			}
+			fOut.close();
+			in.close();
+
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+			
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			
+		}
