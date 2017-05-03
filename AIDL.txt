@@ -1,0 +1,131 @@
+跨进程启动：
+1.Intent intent = new Intent();
+  intent.setComponent(new ComponentName("com.aidl_service", "com.aidl_service.AIDLService"));
+  bindService(intent, connection, BIND_AUTO_CREATE);
+
+要启动的进程manifest添加
+Android:exported="true" ：设置为"True"则表示将该Activity暴露给外部；如果设置了intentFilter之后，exported就默认被设置为true了，除非再强制设为false。
+
+2.Intent intent = new Intent("android.intent.action.AIDLService");
+  intent.setPackage("com.aidl_service");
+  bindService(intent, connection, BIND_AUTO_CREATE);
+
+要启动的进程manifest添加
+<service android:name=".AIDLService">
+    <intent-filter>
+         <action android:name="android.intent.action.AIDLService"/>
+         <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+</service>
+
+
+
+
+
+AIDL(进程间通讯)：
+service端：
+
+public class AIDLService extends Service {
+    private static final String TAG = "AIDLService";
+
+    private IPerson.Stub stub = new IPerson.Stub(){
+
+        @Override
+        public String greet(String someone) throws RemoteException {
+            return "我们正在通过aidl通话: "+someone;
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d(TAG, "service onBind");
+        return stub;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.d(TAG, "service onUnbind");
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "service onDestroy");
+        super.onDestroy();
+    }
+}
+
+manifest:
+         <service android:name=".AIDLService">
+            <intent-filter>
+                <action android:name="android.intent.action.AIDLService"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+
+IPerson.aidl:         (注意：保证两边的aidl内容一致)
+
+package com.aidl_service;
+
+interface IPerson {
+    String greet(String someone);
+}
+
+Client端：
+public class MainActivity extends Activity {
+
+    private IPerson iPerson;
+    public static final String TAG = "AIDLClient";
+
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            iPerson =  IPerson.Stub.asInterface(iBinder);
+            Log.d(TAG, "onServiceConnected");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        findViewById(R.id.btn_bind).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                Intent intent = new Intent("android.intent.action.AIDLService");
+//                intent.setPackage("com.aidl_service");
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.aidl_service", "com.aidl_service.AIDLService"));
+                bindService(intent, connection, BIND_AUTO_CREATE);
+                Log.d(TAG, "start bind");
+            }
+        });
+    }
+
+    /*public void startBind(View view) {
+        Intent intent = new Intent("android.intent.action.AIDLService");
+        bindService(intent, connection, BIND_AUTO_CREATE);
+        Log.d(TAG, "start bind");
+    }*/
+
+    public void greet(View view) {
+        try {
+            String greet = iPerson.greet("通话成功，你好！");
+            Log.d(TAG, greet);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void startUnBind(View view) {
+        unbindService(connection);
+        Log.d(TAG, "start unbind");
+    }
+}
