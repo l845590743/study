@@ -18,7 +18,10 @@ Android:exported="true" ：设置为"True"则表示将该Activity暴露给外部；如果设置了in
     </intent-filter>
 </service>
 
-AIDL：
+
+
+
+AIDL（进程间通讯）：
 service端：
 
 public class AIDLService extends Service {
